@@ -1,37 +1,33 @@
 # GastroFlow
 
-Restaurant Inventory Management SaaS.
+> Multi-tenant inventory and menu cost management for restaurants.
 
-## Features
+## Status
+🚧 In active development — Phase 1 MVP
 
-- Inventory Management
-- Supplier Management
-- Low Stock Alerts
-- Purchase Orders
-- Dashboard
-- Reports
-- Multi-User Access
-- Authentication
-- Analytics
-- Export Data
+## What it does
+- Restaurant registration with isolated multi-tenant data
+- Inventory management with stock movement history
+- Menu cost calculation engine (ingredient cost / profit / margin)
+- Role-based access: Owner, Manager, Employee
 
-## Tech Stack
+## Tech stack
+- ASP.NET Core 8 · Clean Architecture
+- PostgreSQL · EF Core 8
+- Docker · GitHub Actions CI/CD
+- JWT + Refresh Tokens · Multi-tenancy
 
-- ASP.NET Core 8
-- PostgreSQL
-- Docker
-- React
-- GitHub Actions
-- Azure
+## Quick start
+```bash
+# coming in Week 7
+```
+
+## Roadmap
+- [x] Phase 1: SaaS-ready MVP (Weeks 1–8)
+- [ ] Phase 2: Stripe billing, emails, monitoring (Weeks 9–13)
 
 ## Architecture
-
-(To be added)
-
-## Installation
-
-(To be added)
+> See docs/Architecture.md (coming Week 8)
 
 ## Screenshots
-
 (To be added)
