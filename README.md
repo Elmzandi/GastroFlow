@@ -1,2 +1,37 @@
 # GastroFlow
-SaaS-ready MVP built from day one. Multi-tenancy and Clean Architecture are baked in from the start — Stripe, billing, and monitoring come later when the foundation is solid.
+
+Restaurant Inventory Management SaaS.
+
+## Features
+
+- Inventory Management
+- Supplier Management
+- Low Stock Alerts
+- Purchase Orders
+- Dashboard
+- Reports
+- Multi-User Access
+- Authentication
+- Analytics
+- Export Data
+
+## Tech Stack
+
+- ASP.NET Core 8
+- PostgreSQL
+- Docker
+- React
+- GitHub Actions
+- Azure
+
+## Architecture
+
+(To be added)
+
+## Installation
+
+(To be added)
+
+## Screenshots
+
+(To be added)
