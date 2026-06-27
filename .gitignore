@@ -1,0 +1,101 @@
+# ───────────────────────────────────────────
+# SECRETS — never commit these
+# ───────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+
+# appsettings.json IS committed (safe defaults)
+# appsettings.Development.json is NOT (real passwords)
+appsettings.Development.json
+appsettings.Staging.json
+appsettings.Production.json
+
+# ───────────────────────────────────────────
+# .NET BUILD OUTPUT
+# ───────────────────────────────────────────
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# NuGet
+.nuget/
+*.nupkg
+*.snupkg
+**/[Pp]ackages/
+!**/[Pp]ackages/build/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# ───────────────────────────────────────────
+# VISUAL STUDIO & RIDER
+# ───────────────────────────────────────────
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+.idea/
+*.sln.iml
+.vscode/
+
+# ───────────────────────────────────────────
+# ASP.NET CORE
+# ───────────────────────────────────────────
+**/publish/
+**/PublishProfiles/
+*.pfx
+*.p12
+*.mdf
+*.ldf
+**/[Ss]tatici[Cc]lient[Aa]ssets.json
+
+# ───────────────────────────────────────────
+# DOCKER
+# ───────────────────────────────────────────
+# docker-compose.yml is committed (uses ${} variables, no secrets)
+# override file is personal
+docker-compose.override.yml
+.docker/
+
+# ───────────────────────────────────────────
+# OPERATING SYSTEM
+# ───────────────────────────────────────────
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+*~
+
+# ───────────────────────────────────────────
+# TEST RESULTS
+# ───────────────────────────────────────────
+TestResults/
+[Tt]est[Rr]esult*/
+coverage*/
+*.coverage
+*.coveragexml
+*.trx
+
+# ───────────────────────────────────────────
+# LOGS — Serilog writes here (Week 6)
+# ───────────────────────────────────────────
+logs/
+*.log
+nohup.out
