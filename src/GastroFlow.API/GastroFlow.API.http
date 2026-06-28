@@ -1,0 +1,6 @@
+@GastroFlow.API_HostAddress = http://localhost:5042
+
+GET {{GastroFlow.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
