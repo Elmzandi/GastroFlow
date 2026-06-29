@@ -1,3 +1,5 @@
+namespace GastroFlow.Domain.Enums;
+
 public enum SubscriptionPlan
 {
     Free = 0,

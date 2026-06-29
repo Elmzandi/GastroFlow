@@ -1,8 +1,12 @@
+using System.Text;
 using GastroFlow.API.Exceptions;
 using GastroFlow.Application.Interfaces;
 using GastroFlow.Infrastructure.Options;
+using GastroFlow.Infrastructure.Persistence;
 using GastroFlow.Infrastructure.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,8 +20,8 @@ builder.Services.AddScoped<ITenantContext, TenantContext>();
 
 // ────────────────────────────────────────────────────────────────────────────
 // OPTIONS
-// Binds appsettings.json "Jwt" section to JwtOptions record.
-// ValidateOnStart() crashes the app immediately if any required field is missing
+// Binds appsettings "Jwt" section to JwtOptions record.
+// ValidateOnStart() crashes the app at startup if any required field is missing
 // instead of failing silently on the first request.
 // ────────────────────────────────────────────────────────────────────────────
 builder.Services
@@ -25,6 +29,32 @@ builder.Services
     .BindConfiguration(JwtOptions.SectionName)
     .ValidateDataAnnotations()
     .ValidateOnStart();
+
+// ────────────────────────────────────────────────────────────────────────────
+// AUTHENTICATION
+// Validates every incoming JWT against the same key/issuer/audience used to
+// generate it. Without this, [Authorize] on future controllers does nothing.
+// ────────────────────────────────────────────────────────────────────────────
+var jwt = builder.Configuration.GetSection(JwtOptions.SectionName);
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer           = true,
+            ValidateAudience         = true,
+            ValidateLifetime         = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer              = jwt["Issuer"],
+            ValidAudience            = jwt["Audience"],
+            IssuerSigningKey         = new SymmetricSecurityKey(
+                                           Encoding.UTF8.GetBytes(jwt["Key"]!))
+        };
+    });
+
+builder.Services.AddAuthorization();
 
 // ────────────────────────────────────────────────────────────────────────────
 // SERVICES
@@ -37,7 +67,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 // AuthExceptionHandler maps domain exceptions to the correct HTTP status:
 //   EmailAlreadyExistsException  → 409 Conflict
 //   InvalidCredentialsException  → 401 Unauthorized
-// Any unhandled exception falls through to the default 500 handler.
+// Unhandled exceptions fall through to the default 500 handler.
 // ────────────────────────────────────────────────────────────────────────────
 builder.Services.AddExceptionHandler<AuthExceptionHandler>();
 builder.Services.AddProblemDetails();
@@ -56,11 +86,11 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // ────────────────────────────────────────────────────────────────────────────
-// PIPELINE
-// Order matters:
-//   1. UseExceptionHandler — catches everything, must be first
-//   2. UseHttpsRedirection
-//   3. MapControllers
+// PIPELINE  — order is mandatory:
+//   1. UseExceptionHandler  — wraps everything, must be first
+//   2. UseAuthentication    — reads the JWT and populates HttpContext.User
+//   3. UseAuthorization     — checks [Authorize] against HttpContext.User
+//   4. MapControllers       — routes the request to the right action
 // ────────────────────────────────────────────────────────────────────────────
 var app = builder.Build();
 
@@ -77,6 +107,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapControllers();
 app.MapGet("/", () => Results.Redirect("/swagger"));
 app.Run();

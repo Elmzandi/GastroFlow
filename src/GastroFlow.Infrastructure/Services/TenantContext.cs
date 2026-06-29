@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Http;
 
+namespace GastroFlow.Infrastructure.Services;
+
 public class TenantContext : ITenantContext
 {
     public Guid RestaurantId { get;  }
