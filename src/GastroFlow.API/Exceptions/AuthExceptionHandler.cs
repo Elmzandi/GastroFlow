@@ -13,8 +13,9 @@ public sealed class AuthExceptionHandler : IExceptionHandler
     {
         var (statusCode, title) = exception switch
         {
-            EmailAlreadyExistsException => (StatusCodes.Status409Conflict, "Email Already Exists"),
+            EmailAlreadyExistsException  => (StatusCodes.Status409Conflict,   "Email Already Exists"),
             InvalidCredentialsException  => (StatusCodes.Status401Unauthorized, "Invalid Credentials"),
+            InvalidRefreshTokenException => (StatusCodes.Status401Unauthorized, "Invalid Refresh Token"),
             _                            => (0, string.Empty)
         };
 

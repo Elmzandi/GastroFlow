@@ -17,4 +17,7 @@ public sealed record JwtOptions
 
     [Range(1, 1440)]
     public double ExpirationMinutes { get; init; } = 60;
+
+    [Range(1, 90)]
+    public int RefreshTokenExpirationDays { get; init; } = 7;
 }

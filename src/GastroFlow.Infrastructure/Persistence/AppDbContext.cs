@@ -40,6 +40,10 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Restaurant>()
             .HasIndex(r => r.Email)
             .IsUnique();
+
+        modelBuilder.Entity<RefreshToken>()
+            .HasIndex(rt => rt.Token)
+            .IsUnique();
     }
 
     private void SetTenantFilter<T>(ModelBuilder modelBuilder) where T : BaseEntity

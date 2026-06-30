@@ -1,4 +1,6 @@
+using GastroFlow.Infrastructure.Options;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace GastroFlow.Infrastructure.Services;
 
@@ -6,11 +8,13 @@ public sealed class AuthService : IAuthService
 {
     private readonly AppDbContext _db;
     private readonly IJwtService _jwt;
+    private readonly JwtOptions _jwtOptions;
 
-    public AuthService(AppDbContext db, IJwtService jwt)
+    public AuthService(AppDbContext db, IJwtService jwt, IOptions<JwtOptions> jwtOptions)
     {
         _db = db;
         _jwt = jwt;
+        _jwtOptions = jwtOptions.Value;
     }
 
     public async Task<AuthResponse> RegisterAsync(RegisterRequest request, CancellationToken ct = default)
@@ -40,13 +44,16 @@ public sealed class AuthService : IAuthService
             Role = "Owner"
         };
 
+        var refreshToken = CreateRefreshToken(user);
+
         _db.Restaurants.Add(restaurant);
         _db.Users.Add(user);
+        _db.RefreshTokens.Add(refreshToken);
         await _db.SaveChangesAsync(ct);
 
-        var token = _jwt.GenerateToken(user);
+        var accessToken = _jwt.GenerateToken(user);
 
-        return new AuthResponse(token, user.Email, user.Role, user.RestaurantId);
+        return BuildAuthResponse(accessToken, refreshToken.Token, user);
     }
 
     public async Task<AuthResponse> LoginAsync(LoginRequest request, CancellationToken ct = default)
@@ -61,8 +68,53 @@ public sealed class AuthService : IAuthService
         if (user is null || !user.IsActive || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
             throw new InvalidCredentialsException();
 
-        var token = _jwt.GenerateToken(user);
+        var refreshToken = CreateRefreshToken(user);
+        _db.RefreshTokens.Add(refreshToken);
+        await _db.SaveChangesAsync(ct);
 
-        return new AuthResponse(token, user.Email, user.Role, user.RestaurantId);
+        var accessToken = _jwt.GenerateToken(user);
+
+        return BuildAuthResponse(accessToken, refreshToken.Token, user);
     }
+
+    public async Task<AuthResponse> RefreshAsync(RefreshTokenRequest request, CancellationToken ct = default)
+    {
+        // IgnoreQueryFilters: no tenant context exists before the new JWT is issued.
+        var existing = await _db.RefreshTokens
+            .IgnoreQueryFilters()
+            .Include(rt => rt.User)
+            .FirstOrDefaultAsync(rt => rt.Token == request.RefreshToken, ct);
+
+        if (existing is null || !existing.IsActive)
+            throw new InvalidRefreshTokenException();
+
+        // Token rotation: revoke the consumed token and issue a fresh pair.
+        existing.IsRevoked = true;
+
+        var newRefreshToken = CreateRefreshToken(existing.User);
+        _db.RefreshTokens.Add(newRefreshToken);
+        await _db.SaveChangesAsync(ct);
+
+        var accessToken = _jwt.GenerateToken(existing.User);
+
+        return BuildAuthResponse(accessToken, newRefreshToken.Token, existing.User);
+    }
+
+    private RefreshToken CreateRefreshToken(User user) => new()
+    {
+        Token = _jwt.GenerateRefreshToken(),
+        ExpiresAt = DateTime.UtcNow.AddDays(_jwtOptions.RefreshTokenExpirationDays),
+        UserId = user.Id,
+        RestaurantId = user.RestaurantId
+    };
+
+    private AuthResponse BuildAuthResponse(string accessToken, string refreshToken, User user) =>
+        new(
+            accessToken,
+            DateTime.UtcNow.AddMinutes(_jwtOptions.ExpirationMinutes),
+            refreshToken,
+            user.Email,
+            user.Role,
+            user.RestaurantId
+        );
 }
